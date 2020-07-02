@@ -695,6 +695,69 @@ char *aircraftsToJson(int *len) {
     return buf;
 }
 //
+// Return a description of planes in geoJSON. No metric conversion
+// credit goes to Surfdan on github:
+//  https://github.com/MalcolmRobb/dump1090/pull/79
+char *aircraftsToGeoJSON(int *len) {
+    time_t now = time(NULL);
+    struct aircraft *a = Modes.aircrafts;
+    int buflen = 1024; // The initial buffer is incremented as needed
+    char *buf = (char *) malloc(buflen), *p = buf;
+    int l;
+
+    l = snprintf(p,buflen,"{ \"type\": \"FeatureCollection\", \"features\": [\n");
+    p += l; buflen -= l;
+    while(a) {
+        int position = 0;
+        int track = 0;
+
+        if (a->modeACflags & MODEAC_MSG_FLAG) { // skip any fudged ICAO records Mode A/C
+            a = a->next;
+            continue;
+        }
+
+        if (a->bFlags & MODES_ACFLAGS_LATLON_VALID) {
+            position = 1;
+        }
+
+        if (a->bFlags & MODES_ACFLAGS_HEADING_VALID) {
+            track = 1;
+        }
+
+        // No metric conversion
+        l = snprintf(p,buflen,
+            "{\"type\":\"Feature\", \"properties\": { \"hex\":\"%06x\", \"squawk\":\"%04x\", \"callsign\":\"%s\","
+			"\"validposition\":%d, \"altitude\":%d,  \"vert_rate\":%d,\"track\":%d, \"validtrack\":%d,"
+            "\"speed\":%d, \"messages\":%ld, \"seen\":%d }, \"geometry\": { \"type\": \"Point\", \"coordinates\": [%f,%f]} },\n",
+            a->addr, a->modeA, a->flight, position, a->altitude, a->vert_rate, a->track, track,
+            a->speed, a->messages, (int)(now - a->seen), a->lon, a->lat);
+        p += l; buflen -= l;
+
+        //Resize if needed
+        if (buflen < 256) {
+            int used = p-buf;
+            buflen += 1024; // Our increment.
+            buf = (char *) realloc(buf,used+buflen);
+            p = buf+used;
+        }
+
+        a = a->next;
+    }
+
+    //Remove the final comma if any, and closes the json array.
+    if (*(p-2) == ',') {
+        *(p-2) = '\n';
+        p--;
+        buflen++;
+    }
+
+    l = snprintf(p,buflen,"]}\n");
+    p += l; buflen -= l;
+
+    *len = p-buf;
+    return buf;
+}
+//
 //=========================================================================
 //
 #define MODES_CONTENT_TYPE_HTML "text/html;charset=utf-8"
@@ -759,6 +822,9 @@ int handleHTTPRequest(struct client *c, char *p) {
         statuscode = 200;
         content = aircraftsToJson(&clen);
         //snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_JSON);
+    } else if (strstr(url, "/geodata.json")) {
+        statuscode = 200;
+        content = aircraftsToGeoJSON(&clen);
     } else {
         struct stat sbuf;
         int fd = -1;
