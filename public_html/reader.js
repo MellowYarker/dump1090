@@ -1,31 +1,30 @@
+var map = null;
 var Planes        = {}; // key-value pair consisting of key(Plane ICAO): value(PlaneObject)
 var PlanesOnMap   = 0;
-var PlanesOnTable = 0;
-var PlanesToReap  = 0;
-var SelectedPlane = null;
+var PlanesOnTable = 0; // unused currently
+var PlanesToReap  = 0; // unused currently
+var SelectedPlane = null; // unused currently
 var SpecialSquawk = false;
 
-var url = 'dump1090/geodata.json';
-var request = new XMLHttpRequest();
+var data_url = 'dump1090/geodata.json';
 
-function fetch() {
+function fetchData() {
+    var data_request = new XMLHttpRequest(); // TODO: use fetch instead of XHR.
     PlanesOnMap = 0;
     SpecialSquawk = false;
 
-    request.open('GET', url, true);
-    request.send();
-    request.onload = function() {
+    data_request.open('GET', data_url, true);
+    data_request.send();
+    data_request.onload = function() {
         if (this.status === 200) {
             var result = JSON.parse(this.response);
             for (var j = 0; j < result.features.length; j++) {
                 // We know about this plane already
                 if (Planes[result.features[j].properties.hex]) {
                     var plane = Planes[result.features[j].properties.hex]
-                    console.log("Found old plane!")
                 } else {
                     // create a new planeObject
                     var plane = Object.assign({}, planeObject);
-                    console.log("Found new plane!")
                 }
 
                 // Set SpecialSquawk-value
@@ -42,28 +41,20 @@ function fetch() {
             }
         } else {
             console.log("Failed to fetch from server!");
+            data_request.abort();
+            data_request = null;
         }
     } 
-    /*
-        
-        // Set SpecialSquawk-value
-        if (data[j].squawk == '7500' || data[j].squawk == '7600' || data[j].squawk == '7700') {
-            SpecialSquawk = true;
-        }
-
-        // Call the function update
-        plane.funcUpdateData(data[j]);
-        
-        // Copy the plane into Planes
-        Planes[plane.icao] = plane;
-    }
-
-    PlanesOnTable = data.length;
-    */
 };
 
 function initialize() {
+    map = new mapboxgl.Map({
+        container: 'map_canvas',
+        style: MapStyle,
+        center: [-79.3832, 43.6532],
+        zoom: 10
+    });
     window.setInterval(function() {
-        fetch();
+        fetchData();
     }, 1000);
 }
