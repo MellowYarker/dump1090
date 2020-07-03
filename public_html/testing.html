@@ -1,6 +1,8 @@
 <html>
 	<head>
         <meta charset="utf-8"/>
+        <title>Map</title>
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
         <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
         <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js'></script>
         <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css' rel='stylesheet' />
@@ -8,9 +10,38 @@
         <script type="text/javascript" src="newPlane.js"></script>
         <script type="text/javascript" src="reader.js"></script>
         
-        <title>HEY</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            #map_canvas {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+            }
+            .marker {
+                background-image: url('plane.png');
+                background-size: cover;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            .mapboxgl-popup {
+                max-width: 200px;
+            }
+
+            .mapboxgl-popup-content {
+                text-align: center;
+                font-family: 'Open Sans', sans-serif;
+            }
+        </style>
     </head>
+
     <body onload="initialize();">
-        <div>Hi!</div>
+        <div id='map_canvas'></div>
     </body>
 </html>
