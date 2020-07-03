@@ -11,7 +11,7 @@ var planeObject = {
 	longitude	: null,
 	
 	// Info about the plane
-	flight		: null,
+	callsign	: null,
 	squawk		: null,
 	icao		: null,
 	is_selected	: false,	
@@ -27,12 +27,10 @@ var planeObject = {
 	// GMap Details
 	// TODO (MILAN): We can use this for mapbox too.
 	/**	marker would be the actual mapbox marker object
-	 *  note we no longer need 'marked', as the Planes KV store will let us identify if a plane
-	 *  has been marked by simply checking if Planes[plane.icao] exists.
 	 * 
 	 */
 	marker		: null,
-	marked		: 0,
+	marked		: false, // true if mapbox marker exists for this plane, else false
 	markerColor	: MarkerColor,
 	lines		: [],
 	trackdata	: new Array(),
@@ -113,9 +111,9 @@ var planeObject = {
 			this.altitude	= updateProperty.altitude;
 			this.speed	= updateProperty.speed;
 			this.track	= updateProperty.track;
-			this.latitude	= updateCoord.lat;
-			this.longitude	= updateCoord.lon;
-			this.flight	= updateProperty.flight;
+			this.longitude	= updateCoord[0];
+			this.latitude	= updateCoord[1];
+			this.callsign	= updateProperty.callsign;
 			this.squawk	= updateProperty.squawk;
 			this.icao	= updateProperty.hex;
 			this.messages	= updateProperty.messages;
@@ -125,9 +123,9 @@ var planeObject = {
 			// This way we can hold it, but not show it just in case the plane comes back
 			if (this.seen > 58) {
 				this.reapable = true;
-				if (this.marked === 1) {
+				if (this.marked) {
 					this.marker.remove();
-					this.marked = 0;
+					this.marked = false;
 				}
 				// TODO (MILAN): Come back to this when we can draw lines!
 				// if (this.line) {
@@ -188,23 +186,25 @@ var planeObject = {
 
 	// Update our marker on the map
 	funcUpdateMarker: function() {
-			// if this plane is already marked
+			// if this plane is already marked, update the position
 			if (this.marked) {
 				this.marker.setLngLat([this.longitude, this.latitude]);
-				// this.marker.setIcon(this.funcGetIcon()); // not necessary for now
 			} else {
 				// create a HTML element for the marker.
 				var el = document.createElement('div');
 				el.className = 'marker';
 
-				// make a marker and add it to the map.
+				// make a new marker and add it to the map.
 				this.marker = new mapboxgl.Marker(el)
 					.setLngLat([this.longitude, this.latitude])
 					.setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
-					.setHTML('<h3>' + this.flight.length === 0 ? this.hex : this.flight + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')) // popup content 
+					.setHTML('<h3>' + this.callsign.length === 0 ? this.hex : this.callsign + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')) // popup content 
 					.addTo(map);
 
-				this.marked = 1;
+				this.marked = true;
+			}
+
+			this.marker.setRotation(this.track); // rotate the plane icon
 
 				// This is so we can match icao address
 				// TODO (MILAN): why was this needed? our this.marker is a mapbox marker so we can't do this.
@@ -213,8 +213,6 @@ var planeObject = {
 				// Trap clicks for this marker.
 				// TODO (MILAN): we want to do something similar!
 				// google.maps.event.addListener(this.marker, 'click', this.funcSelectPlane);
-			}
-
 			return this.marker;
 		},
 
