@@ -9,12 +9,13 @@ var planeObject = {
 	track		: null,
 	latitude	: null,
 	longitude	: null,
-	
+	coord_change: false,
+
 	// Info about the plane
 	callsign	: null,
 	squawk		: null,
 	icao		: null,
-	is_selected	: false,	
+	is_selected	: false,
 
 	// Data packet numbers
 	messages	: null,
@@ -27,7 +28,7 @@ var planeObject = {
 	// GMap Details
 	// TODO (MILAN): We can use this for mapbox too.
 	/**	marker would be the actual mapbox marker object
-	 * 
+	 *
 	 */
 	marker		: null,
 	marked		: false, // true if mapbox marker exists for this plane, else false
@@ -57,9 +58,9 @@ var planeObject = {
 		},
 
 	// Should create an icon for us to use on the map...
-	// TODO (MILAN): do we need to do anything? Our icon is just a PNG and we can 
+	// TODO (MILAN): do we need to do anything? Our icon is just a PNG and we can
 	// 		 control the rotation when we set the icon.
-	funcGetIcon	: function() {
+	funcGetIcon		: function() {
 			this.markerColor = MarkerColor;
 			// If this marker is selected we should make it lighter than the rest.
 			if (this.is_selected == true) {
@@ -70,7 +71,7 @@ var planeObject = {
 			if (this.seen > 15) {
 				this.markerColor = StaleColor;
 			}
-			
+
 			// If the squawk code is one of the international emergency codes,
 			// match the info window alert color.
 			if (this.squawk == 7500) {
@@ -86,10 +87,10 @@ var planeObject = {
 			// If we have not overwritten color by now, an extension still could but
 			// just keep on trucking.  :)
 
-			return {
+			// return {
                 // anchor: new google.maps.Point(32, 32), //anchor to middle of plane.
                 // rotation: this.track
-            };
+            // };
 		},
 
 	// TODO: Trigger actions of a selecting a plane
@@ -100,9 +101,9 @@ var planeObject = {
 	// Update the plane data that we recieve from the geoJSON response.
 	funcUpdateData	: function(data){
 			// So we can find out if we moved
-			var oldlat 	= this.latitude;
-			var oldlon	= this.longitude;
-			var oldalt	= this.altitude;
+			this.oldlat = this.latitude;
+			this.oldlon = this.longitude;
+			this.oldalt = this.altitude;
 
 			var updateProperty  = data.properties; // property geoJSON
 			var updateCoord 	= data.geometry.coordinates; // coordinate geoJSON
@@ -153,24 +154,28 @@ var planeObject = {
 				changeLat = false;
 				changeLon = false;
 				changeAlt = false;
-				if (oldlat != this.latitude) {
+				if (this.oldlat != this.latitude) {
 					changeLat = true;
 				}
-				if (oldlon != this.longitude) {
+				if (this.oldlon != this.longitude) {
 					changeLon = true;
 				}
-				if (oldalt != this.altitude) {
+				if (this.oldalt != this.altitude) {
 					changeAlt = true;
 				}
 				// Right now we only care about lat/long, if alt is updated only, oh well
 				// TODO (MILAN): if we add 3D, we will want to modify this!
 				if ((changeLat == true) || (changeLon == true)) {
+					this.coord_change = true;
 					this.funcAddToTrack();
 					// TODO (MILAN): another line situation.
 					if (this.is_selected) {
 						this.line = this.funcUpdateLines();
 					}
+				} else {
+					this.coord_change = false;
 				}
+
 				this.marker = this.funcUpdateMarker();
 				PlanesOnMap++;
 			} else {
@@ -185,30 +190,104 @@ var planeObject = {
 		},
 
 	// Update our marker on the map
+	/** We do this in 3 ways
+	 * 	1. 	If a marker exists but we haven't gotten an update/there is no
+	 * 		previous position data, just set the position.
+	 *
+	 * 2. 	If we have a new position and a previous position, we can animate
+	 * 		the transition between coordinates.
+	 *
+	 * 3. 	We are handling a newly discovered aircraft, so we should create
+	 * 		a new marker.
+	 */
 	funcUpdateMarker: function() {
-			// if this plane is already marked, update the position
-			if (this.marked) {
+			if (this.marked && (this.oldlon === null || !this.coord_change)) {
 				this.marker.setLngLat([this.longitude, this.latitude]);
+			} else if (this.marked && this.coord_change) {
+				// if we have 2 points, animate the transition
+				// some times looks a bit jumpy on the map due to lack of
+				// coordinate updates
+
+				// Yes, this should be a function, but requestAnimationFrame
+				// requires 'start' to be undefined each time we restart the
+				// animation.
+				let start = null;
+				let loop = (timestamp) => {
+					if (!start) {
+						start = timestamp;
+					}
+					const elapsed = timestamp - start;
+
+					let duration = 0.94; // duration of the animation in seconds, subject for review.
+					let x, y;
+					// Transition from old pos to new pos in a line.
+					// y = m(x - x_0) + y_0,   where *_0 is old position coord.
+
+					// position delta's
+					let del_y = Math.abs(this.oldlat) - Math.abs(this.latitude);
+					let del_x = Math.abs(this.oldlon) - Math.abs(this.longitude);
+
+					// x is our independent variable, we will move del_x units
+					// in duration seconds, dividing gives the change per ms.
+					// elapsed gives us the number of ms that have passed.
+					let candidate = (Math.abs(del_x) * (1/(duration * 1000))) * elapsed;
+
+					// slope of our transition line, we deal with the sign below
+					let m = Math.abs(del_y / del_x);
+
+					// If the old position is the origin of the cartesian plane,
+					// the sign of the slope is:
+					// 	 + if direction of travel is SW/NE
+					// 	 - if direction of travel is SE/NW
+					let north, south, east, west = false;
+
+					this.latitude > this.oldlat ? north = true : south = true;
+					this.longitude > this.oldlon ? east = true : west = true;
+					// Set the slope's sign.
+					if ((north && west) || (south && east)) {
+						m = (-1) * m
+					}
+
+					// We only need to determine x, since y depends on x
+					if (west) {
+						// transition right to left
+						x = Math.max(this.longitude, this.oldlon - candidate);
+					} else {
+						// transition left to right
+						x = Math.min(this.longitude, this.oldlon + candidate);
+					}
+
+					// occasionally may have 0*0.
+					if (isNaN(m*(x - this.oldlon))) {
+						y = this.oldlat;
+					} else {
+						y = m * (x - this.oldlon) + this.oldlat;
+					}
+
+					this.marker.setLngLat([x, y]); // new marker position
+					// loop for duration seconds
+					if (elapsed < duration * 1000){
+						requestAnimationFrame(loop.bind(this));
+					}
+				};
+				requestAnimationFrame(loop.bind(this));
 			} else {
 				// create a HTML element for the marker.
 				var el = document.createElement('div');
 				el.className = 'marker';
 
 				// make a new marker and add it to the map.
+				// the pop up is kind of stupid, maybe we can do something cooler.
 				this.marker = new mapboxgl.Marker(el)
 					.setLngLat([this.longitude, this.latitude])
 					.setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
-					.setHTML('<h3>' + this.callsign.length === 0 ? this.hex : this.callsign + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')) // popup content 
+					.setHTML('<h3>' + this.callsign.length === 0 ? this.hex : this.callsign + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')) // popup content
 					.addTo(map);
 
 				this.marked = true;
 			}
 
 			this.marker.setRotation(this.track); // rotate the plane icon
-
-				// This is so we can match icao address
-				// TODO (MILAN): why was this needed? our this.marker is a mapbox marker so we can't do this.
-				// this.marker.icao = this.icao;
 
 				// Trap clicks for this marker.
 				// TODO (MILAN): we want to do something similar!

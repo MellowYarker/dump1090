@@ -52,8 +52,12 @@ function initialize() {
         container: 'map_canvas',
         style: MapStyle,
         center: [-79.3832, 43.6532],
-        zoom: 10
+        zoom: 9
     });
+    // Add zoom and rotation controls to the map.
+    map.addControl(new mapboxgl.NavigationControl());
+    // Disable rotation for now, otherwise the icons behave strangely.
+    map.dragRotate.disable();
     window.setInterval(function() {
         fetchData();
     }, 1000);
