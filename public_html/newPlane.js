@@ -110,19 +110,19 @@ var planeObject = {
             this.oldalt = this.altitude;
 
             var updateProperty  = data.properties; // property geoJSON
-            var updateCoord 	= data.geometry.coordinates; // coordinate geoJSON
+            var updateCoord     = data.geometry.coordinates; // coordinate geoJSON
             // Update all of our data
-            this.updated	= new Date().getTime();
-            this.altitude	= updateProperty.altitude;
-            this.speed	= updateProperty.speed;
-            this.track	= updateProperty.track;
-            this.longitude	= updateCoord[0];
-            this.latitude	= updateCoord[1];
-            this.callsign	= updateProperty.callsign;
-            this.squawk	= updateProperty.squawk;
-            this.icao	= updateProperty.hex;
-            this.messages	= updateProperty.messages;
-            this.seen	= updateProperty.seen;
+            this.updated    = new Date().getTime();
+            this.altitude   = updateProperty.altitude;
+            this.speed      = updateProperty.speed;
+            this.track      = updateProperty.track;
+            this.longitude  = updateCoord[0];
+            this.latitude   = updateCoord[1];
+            this.callsign   = updateProperty.callsign;
+            this.squawk     = updateProperty.squawk;
+            this.icao       = updateProperty.hex;
+            this.messages   = updateProperty.messages;
+            this.seen       = updateProperty.seen;
 
             // set the sourceID for the line
             if (!this.sourceID && this.icao) {
