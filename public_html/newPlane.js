@@ -55,16 +55,16 @@ var planeObject = {
 	//		altitude (default) or speed
 	// (milan): we can do this if we make the line an array of geoJSON objects.
 	funcUpdateLines: function() {
-            // update our cooridinates array
-            this.line.data.geometry.coordinates = this.trackline;
+			// update our cooridinates array
+			this.line.data.geometry.coordinates = this.trackline;
 
-            // either update or create the line source
-            if (map.getSource(this.sourceID)) {
-                (map.getSource(this.sourceID)).setData(this.line.data);
-            } else {
-                map.addSource(this.sourceID, this.line);
-            }
-        },
+			// either update or create the line source
+			if (map.getSource(this.sourceID)) {
+				(map.getSource(this.sourceID)).setData(this.line.data);
+			} else {
+				map.addSource(this.sourceID, this.line);
+			}
+		},
 
 	// Appends data to the running track so we can get a visual tail on the plane
 	// Only useful for a long running browser session.
@@ -75,31 +75,31 @@ var planeObject = {
 
 	// This is to remove the line from the screen if we deselect the plane
 	funcClearLine	: function() {
-            // only try to remove if a layer is found
-            if (map.getLayer(this.sourceID)) {
-                this.is_selected = false;
-                map.removeLayer(this.sourceID);
-            }
-        },
+			// only try to remove if a layer is found
+			if (map.getLayer(this.sourceID)) {
+				this.is_selected = false;
+				map.removeLayer(this.sourceID);
+			}
+		},
 
 	// update and display the planes tail line
 	funcSelectPlane	: function() {
-            this.is_selected = true;
+			this.is_selected = true;
 			this.funcUpdateLines();
-            // add the layer to the map
-            map.addLayer({
-                "id"    :  	this.sourceID,
-                "type"  : "line",
-                "source": this.sourceID,
-                "layout": {
-                    "line-join" : "round",
-                    "line-cap"  : "round",
-                },
-                "paint": {
-                    "line-color"   : "#e96c51",
-                    "line-width"    : 5
-                }
-            });
+			// add the layer to the map
+			map.addLayer({
+				"id"    :  	this.sourceID,
+				"type"  : "line",
+				"source": this.sourceID,
+				"layout": {
+					"line-join" : "round",
+					"line-cap"  : "round",
+				},
+				"paint": {
+					"line-color"   : "#e96c51",
+					"line-width"    : 5
+				}
+			});
 		},
 
 	// Update the plane data that we recieve from the geoJSON response.
@@ -124,10 +124,10 @@ var planeObject = {
 			this.messages	= updateProperty.messages;
 			this.seen	= updateProperty.seen;
 
-            // set the sourceID for the line
-            if (!this.sourceID && this.icao) {
-                this.sourceID = this.icao + "-line";
-            }
+			// set the sourceID for the line
+			if (!this.sourceID && this.icao) {
+				this.sourceID = this.icao + "-line";
+			}
 			// If no packet in over 58 seconds, consider the plane reapable
 			// This way we can hold it, but not show it just in case the plane comes back
 			if (this.seen > 58) {
@@ -140,8 +140,8 @@ var planeObject = {
 					this.line.data.geometry.coordinates = [];
 					this.trackline = [];
 					this.trackdata = [];
-                    this.funcClearLine();
-                    // TODO (milan): we might not want to fully remove the source yet
+					this.funcClearLine();
+					// TODO (milan): we might not want to fully remove the source yet
 					// map.removeSource(this.sourceID);
 				}
 			} else {
@@ -283,8 +283,8 @@ var planeObject = {
 					.setLngLat([this.longitude, this.latitude])
 					.setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
 					.setHTML('<h3>' + this.callsign.length === 0 ? this.hex : this.callsign + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')
-                    .on('open', this.funcSelectPlane.bind(this)) // plane has been selected
-                    .on('close', this.funcClearLine.bind(this))) // plane has been deselected
+					.on('open', this.funcSelectPlane.bind(this)) // plane has been selected
+					.on('close', this.funcClearLine.bind(this))) // plane has been deselected
 					.addTo(map);
 
 				this.marked = true;
