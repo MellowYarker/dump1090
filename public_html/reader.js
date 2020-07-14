@@ -2,7 +2,7 @@ var map             = null;
 var Planes          = {}; // key-value pair consisting of key(Plane ICAO): value(PlaneObject)
 var PlanesOnMap     = 0;
 var PlanesOnTable   = 0; // currently unused
-var PlanesToReap    = 0; // currently unused
+var PlanesToReap    = 0;
 var SelectedPlane   = null; // currently unused
 var SpecialSquawk   = false;
 var data_url        = 'dump1090/geodata.json';
@@ -73,6 +73,31 @@ function initialize() {
 
         window.setInterval(function() {
             fetchData();
+            reaper();
         }, 1000);
     });
+}
+
+// This looks for planes to reap out of the master Planes variable
+function reaper() {
+    PlanesToReap = 0;
+    // When did the reaper start?
+    reaptime = new Date().getTime();
+    // Loop the planes
+    for (var reap in Planes) {
+        // Is this plane possibly reapable?
+        if (Planes[reap].reapable == true) {
+            // Has it not been seen for 5 minutes?
+            // This way we still have it if it returns before then
+            // due to loss of signal or other reasons
+            if ((reaptime - Planes[reap].updated) > 300000) {
+                // Reap it
+                if (map.getSource(Planes[reap].sourceID)) {
+                    map.removeSource(Planes[reap].sourceID);
+                }
+                delete Planes[reap];
+            }
+            PlanesToReap++
+        }
+    }
 }
