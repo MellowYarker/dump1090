@@ -25,10 +25,17 @@ function fetchData() {
                 } else {
                     // create a new planeObject
                     var plane = Object.assign({}, planeObject);
+                    // unfortunately idk javascript and this Object.assign thingy is
+                    // modifying properties like plane.altitude/trackline/trackdata
+                    // and it's messing w/ my vibe (and the lines on the map!) so
+                    // we're just gonna make sure that data is reset here.
+                    plane.altitude = null;
+                    plane.trackline = [];
+                    plane.trackdata = [];
                 }
 
                 // Set SpecialSquawk-value
-                if (result.features[j].properties.squawk == '7500' || result.features[j].properties.squawk == '7600' || 
+                if (result.features[j].properties.squawk == '7500' || result.features[j].properties.squawk == '7600' ||
                     result.features[j].properties.squawk == '7700') {
                     SpecialSquawk = true;
                 }
@@ -44,7 +51,7 @@ function fetchData() {
             data_request.abort();
             data_request = null;
         }
-    } 
+    }
 };
 
 function initialize() {
@@ -54,11 +61,14 @@ function initialize() {
         center: [-79.3832, 43.6532],
         zoom: 9
     });
-    // Add zoom and rotation controls to the map.
-    map.addControl(new mapboxgl.NavigationControl());
-    // Disable rotation for now, otherwise the icons behave strangely.
-    map.dragRotate.disable();
-    window.setInterval(function() {
-        fetchData();
-    }, 1000);
+    map.on('load', function() {
+        // Add zoom and rotation controls to the map.
+        map.addControl(new mapboxgl.NavigationControl());
+        // Disable rotation for now, otherwise the icons behave strangely.
+        map.dragRotate.disable();
+
+        window.setInterval(function() {
+            fetchData();
+        }, 1000);
+    });
 }
