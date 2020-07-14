@@ -1,12 +1,11 @@
-var map = null;
-var Planes        = {}; // key-value pair consisting of key(Plane ICAO): value(PlaneObject)
-var PlanesOnMap   = 0;
-var PlanesOnTable = 0; // unused currently
-var PlanesToReap  = 0; // unused currently
-var SelectedPlane = null; // unused currently
-var SpecialSquawk = false;
-
-var data_url = 'dump1090/geodata.json';
+var map             = null;
+var Planes          = {}; // key-value pair consisting of key(Plane ICAO): value(PlaneObject)
+var PlanesOnMap     = 0;
+var PlanesOnTable   = 0; // currently unused
+var PlanesToReap    = 0; // currently unused
+var SelectedPlane   = null; // currently unused
+var SpecialSquawk   = false;
+var data_url        = 'dump1090/geodata.json';
 
 function fetchData() {
     var data_request = new XMLHttpRequest(); // TODO: use fetch instead of XHR.
@@ -25,10 +24,15 @@ function fetchData() {
                 } else {
                     // create a new planeObject
                     var plane = Object.assign({}, planeObject);
-                    // unfortunately idk javascript and this Object.assign thingy is
-                    // modifying properties like plane.altitude/trackline/trackdata
-                    // and it's messing w/ my vibe (and the lines on the map!) so
-                    // we're just gonna make sure that data is reset here.
+                    /** this Object.assign thingy is modifying properties like
+                     * plane.altitude/trackline/trackdata and it's messing
+                     * w/ my vibe (and the lines on the map!) so
+                     * we're just gonna make sure that the data is reset here.
+                     *
+                     * The better way to do this would be to create a
+                     * planeObject constructor, so we can initalize it that way,
+                     * but it's not super important right now
+                     **/
                     plane.altitude = null;
                     plane.trackline = [];
                     plane.trackdata = [];
@@ -64,7 +68,7 @@ function initialize() {
     map.on('load', function() {
         // Add zoom and rotation controls to the map.
         map.addControl(new mapboxgl.NavigationControl());
-        // Disable rotation for now, otherwise the icons behave strangely.
+        // Disable rotation, otherwise the icons behave in ~mysterious~ ways.
         map.dragRotate.disable();
 
         window.setInterval(function() {
