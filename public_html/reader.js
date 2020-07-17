@@ -49,6 +49,14 @@ function fetchData() {
 
                 // Copy the plane into Planes
                 Planes[plane.icao] = plane;
+
+                // update the info window if it's open
+                if (Planes[plane.icao].is_selected) {
+                    vm.callsign = Planes[plane.icao].callsign;
+                    vm.icao = Planes[plane.icao].icao;
+                    vm.altitude = Planes[plane.icao].altitude;
+                    vm.speed = Planes[plane.icao].speed;
+                }
             }
         } else {
             console.log("Failed to fetch from server!");
@@ -83,8 +91,10 @@ function reaper() {
     PlanesToReap = 0;
     // When did the reaper start?
     reaptime = new Date().getTime();
+    let count = 0;
     // Loop the planes
     for (var reap in Planes) {
+        count++;
         // Is this plane possibly reapable?
         if (Planes[reap].reapable == true) {
             // Has it not been seen for 5 minutes?
@@ -100,4 +110,6 @@ function reaper() {
             PlanesToReap++
         }
     }
+
+    PlanesOnMap = count - PlanesToReap;
 }
