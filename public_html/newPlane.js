@@ -57,10 +57,10 @@ var planeObject = {
     funcUpdateLines : function() {
             // update our cooridinates array
             this.line.data.geometry.coordinates = this.trackline;
-
+            var source = map.getSource(this.sourceID);
             // either update or create the line source
-            if (map.getSource(this.sourceID)) {
-                (map.getSource(this.sourceID)).setData(this.line.data);
+            if (source) {
+                source.setData(this.line.data);
             } else {
                 map.addSource(this.sourceID, this.line);
             }
@@ -68,7 +68,7 @@ var planeObject = {
 
     // Appends data to the running track so we can get a visual tail on the plane
     // Only useful for a long running browser session.
-    funcAddToTrack  : function(){
+    funcAddToTrack  : function() {
             this.trackdata.push([this.longitude, this.latitude, this.altitude, this.track, this.speed]);
             this.trackline.push([this.longitude, this.latitude]);
         },
@@ -77,9 +77,20 @@ var planeObject = {
     funcClearLine   : function() {
             // only try to remove if a layer is found
             if (map.getLayer(this.sourceID)) {
-                this.is_selected = false;
                 map.removeLayer(this.sourceID);
             }
+        },
+
+    // Closes info box and resets Vue instance.
+    funcUnselectPlane: function() {
+            this.is_selected = false;
+
+            // zero out the data in the info window
+            vm.view     = false;
+            vm.callsign = null;
+            vm.icao     = null;
+            vm.altitude = null
+            vm.speed    = null;
         },
 
     // update and display the planes tail line
@@ -100,6 +111,13 @@ var planeObject = {
                     "line-width"    : 5
                 }
             });
+
+            // update Vue instance for info window
+            vm.callsign = this.callsign;
+            vm.icao = this.icao;
+            vm.altitude = this.altitude;
+            vm.speed = this.speed;
+            vm.view = true; // displays the window
         },
 
     // Update the plane data that we recieve from the geoJSON response.
@@ -141,8 +159,9 @@ var planeObject = {
                     this.trackline = [];
                     this.trackdata = [];
                     this.funcClearLine();
-                    // TODO (milan): we might not want to fully remove the source yet
-                    // map.removeSource(this.sourceID);
+                }
+                if (this.is_selected) {
+                    this.funcUnselectPlane();
                 }
             } else {
                 // TODO (MILAN): is this a plane that has returned from a reaped state?
@@ -205,11 +224,11 @@ var planeObject = {
             if (this.marked && (this.oldlon === null || !this.coord_change)) {
                 this.marker.setLngLat([this.longitude, this.latitude]);
             } else if (this.marked && this.coord_change) {
-                // if we have 2 points, animate the transition
+                // if we have 2 points, animate the transition.
                 // some times looks a bit jumpy on the map due to lack of
                 // coordinate updates
 
-                // Yes, this should be a function, but requestAnimationFrame
+                // Yes, this should be a separate function, but requestAnimationFrame
                 // requires 'start' to be undefined each time we restart the
                 // animation.
                 let start = null;
@@ -278,20 +297,25 @@ var planeObject = {
                 el.className = 'marker';
 
                 // make a new marker and add it to the map.
-                // the pop up is kind of stupid, maybe we can do something cooler.
                 this.marker = new mapboxgl.Marker(el)
                     .setLngLat([this.longitude, this.latitude])
-                    .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
-                    .setHTML('<h3>' + this.callsign.length === 0 ? this.hex : this.callsign + ' ('+ this.icao + ')' + '</h3><p>' + 'add something here' + '</p>')
-                    .on('open', this.funcSelectPlane.bind(this)) // plane has been selected
-                    .on('close', this.funcClearLine.bind(this))) // plane has been deselected
                     .addTo(map);
 
                 this.marked = true;
+
+                // mapbox markers are too restrictive, so we use our own
+                // click handler
+                el.addEventListener('click', () => {
+                    if (this.is_selected === false) {
+                        this.funcSelectPlane();
+                    } else {
+                        this.funcUnselectPlane();
+                        this.funcClearLine();
+                    }
+                });
             }
 
             this.marker.setRotation(this.track); // rotate the plane icon
-
             return this.marker;
     }
 };
