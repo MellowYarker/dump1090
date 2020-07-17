@@ -9,6 +9,7 @@
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="newPlane.js"></script>
     <script type="text/javascript" src="reader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <style>
       body {
@@ -31,17 +32,55 @@
         cursor: pointer;
       }
       .mapboxgl-popup {
-        max-width: 200px;
+        max-width: 300px;
       }
 
       .mapboxgl-popup-content {
         text-align: center;
         font-family: 'Open Sans', sans-serif;
+        background: #4D4C4C;
+        opacity: 70%;
+        width: 300px;
+      }
+
+      .mapboxgl-popup-content ul {
+        color: white;
+      }
+
+      .infoBox {
+          background: white;
+          width: 300px;
+          height: 200px;
+          border: black;
       }
     </style>
   </head>
 
   <body onload="initialize();">
-    <div id='map_canvas'></div>
+    <div id='map_canvas'>
+        <div v-if='view' id='info'>
+            <div class="mapboxgl-popup mapboxgl-popup-anchor-bottom" style="z-index: 1;">
+                <div class="mapboxgl-popup-content">
+                    <ul>Flight: {{callsign}}</ul>
+                    <ul>Aircraft ID: {{icao}}</ul>
+                    <ul>Altitude: {{altitude}} ft</ul>
+                    <ul>Speed: {{speed}} kt</ul>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Easily modify the values in the aircraft info window.
+            var vm = new Vue({
+                el: '#info',
+                data: {
+                    callsign    : null,
+                    icao        : null,
+                    altitude    : null,
+                    speed       : null,
+                    view        : false
+                }
+            });
+        </script>
+    </div>
   </body>
 </html>
