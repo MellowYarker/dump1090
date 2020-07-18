@@ -1,8 +1,9 @@
 Dump1090 README
 ===
+
 This software requires an RTL-SDR and an antenna, for more details, see the full Dump 1090 [README](https://github.com/MalcolmRobb/dump1090/blob/master/README.md).
 
-This is a fork of MalcolmRobb's [dump1090](https://github.com/MalcolmRobb/dump1090/) repo, effectively all changes can be found in the frontend browser client.
+This README is a largely stripped down version of the one linked above, which goes into much more depth on the dump1090 ModeS decoder. This repo is a fork of MalcolmRobb's [dump1090](https://github.com/MalcolmRobb/dump1090/) repo, effectively all changes can be found in the frontend browser client. If you want to extend dump1090's browser frontend with mapbox, then this software contains the groundwork for you.
 
 **Changes**:
 
@@ -31,10 +32,13 @@ Type "make".
 
 Normal usage
 ---
+First, add your mapbox API key to `public_html/config.js`. You can modify the map style url there too.
 
 To open the map in your browser at http://localhost:8080, run:
 
     ./dump1090 --interactive --net
+
+You can also view the original google map at http://localhost:8080/gmap.html
 
 Aggressive mode
 ---
