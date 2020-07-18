@@ -82,6 +82,7 @@ function initialize() {
         window.setInterval(function() {
             fetchData();
             reaper();
+            vm.blink();
         }, 1000);
     });
 }

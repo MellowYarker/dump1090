@@ -64,6 +64,15 @@ var planeObject = {
             } else {
                 map.addSource(this.sourceID, this.line);
             }
+            if (this.is_selected) {
+                vm.ascending = false;
+                vm.descending = false;
+                if (this.oldalt < this.altitude) {
+                    vm.ascending  = true;
+                } else {
+                    vm.descending = true;
+                }
+            }
         },
 
     // Appends data to the running track so we can get a visual tail on the plane

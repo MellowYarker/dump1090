@@ -36,11 +36,19 @@
       }
 
       .mapboxgl-popup-content {
-        text-align: center;
+        text-align: left;
         font-family: 'Open Sans', sans-serif;
         background: #4D4C4C;
-        opacity: 70%;
+        opacity: 85%;
         width: 300px;
+        border-radius: 0px 50px 50px 0px;
+      }
+
+      .status {
+        max-width: 85px;
+        max-height: 60px;
+        margin: 15% 0% 0% 60%;
+        position: absolute;
       }
 
       .mapboxgl-popup-content ul {
@@ -61,6 +69,8 @@
         <div v-if='view' id='info'>
             <div class="mapboxgl-popup mapboxgl-popup-anchor-bottom" style="z-index: 1;">
                 <div class="mapboxgl-popup-content">
+                    <img v-if='ascending' src="ascend.png" class='status'>
+                    <img v-else-if='descending' src="descend.png" class='status'>
                     <ul>Flight: {{callsign}}</ul>
                     <ul>Aircraft ID: {{icao}}</ul>
                     <ul>Altitude: {{altitude}} ft</ul>
@@ -77,7 +87,20 @@
                     icao        : null,
                     altitude    : null,
                     speed       : null,
+                    ascending   : false,
+                    descending  : false,
                     view        : false
+                },
+                methods: {
+                    blink: function() {
+                        if (this.ascending) {
+                            setTimeout(() => { this.ascending = false; }, 700);
+                            this.ascending = true;
+                        } else if (this.descending) {
+                            setTimeout(() => { this.descending = false; }, 700);
+                            this.descending = true;
+                        }
+                    }
                 }
             });
         </script>
