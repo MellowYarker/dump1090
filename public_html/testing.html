@@ -18,7 +18,7 @@
       }
 
       .marker {
-        background-image: url('planeIcon.png');
+        background-image: url('icons/planeIcon.png');
         background-size: cover;
         border-radius: 50%;
         cursor: pointer;
@@ -71,8 +71,8 @@
         <div v-if='view' id='info'>
             <div class="mapboxgl-popup mapboxgl-popup-anchor-bottom" style="z-index: 1;">
                 <div class="mapboxgl-popup-content">
-                    <img v-if='ascending' src="ascend.png" class='status'>
-                    <img v-else-if='descending' src="descend.png" class='status'>
+                    <img v-if='ascending' src="icons/ascend.png" class='status'>
+                    <img v-else-if='descending' src="icons/descend.png" class='status'>
                     <ul>Flight: {{callsign}}</ul>
                     <ul>Aircraft ID: {{icao}}</ul>
                     <ul>Altitude: {{altitude}} ft</ul>
