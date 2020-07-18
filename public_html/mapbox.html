@@ -6,37 +6,31 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="newPlane.js"></script>
     <script type="text/javascript" src="reader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <style>
       body {
         margin: 0;
         padding: 0;
       }
-
-      .marker {
-        background-image: url('icons/planeIcon.png');
-        background-size: cover;
-        border-radius: 50%;
-        cursor: pointer;
-        height: 50px;
-        width: 50px;
+      .infoBox {
+        background: white;
+        border: black;
+        height: 200px;
+        width: 300px;
       }
-
       #map_canvas {
         bottom: 0;
         position: absolute;
         top: 0;
         width: 100%;
       }
-
       .mapboxgl-popup {
         max-width: 300px;
       }
-
       .mapboxgl-popup-content {
         background: #4D4C4C;
         border-radius: 0px 50px 50px 0px;
@@ -45,67 +39,66 @@
         text-align: left;
         width: 300px;
       }
-
+      .mapboxgl-popup-content ul {
+        color: white;
+      }
+      .marker {
+        background-image: url('icons/planeIcon.png');
+        background-size: cover;
+        border-radius: 50%;
+        cursor: pointer;
+        height: 50px;
+        width: 50px;
+      }
       .status {
         margin: 15% 0% 0% 60%;
         max-height: 60px;
         max-width: 85px;
         position: absolute;
       }
-
-      .mapboxgl-popup-content ul {
-        color: white;
-      }
-
-      .infoBox {
-          background: white;
-          border: black;
-          height: 200px;
-          width: 300px;
-      }
     </style>
   </head>
 
   <body onload="initialize();">
     <div id='map_canvas'>
-        <div v-if='view' id='info'>
-            <div class="mapboxgl-popup mapboxgl-popup-anchor-bottom" style="z-index: 1;">
-                <div class="mapboxgl-popup-content">
-                    <img v-if='ascending' src="icons/ascend.png" class='status'>
-                    <img v-else-if='descending' src="icons/descend.png" class='status'>
-                    <ul>Flight: {{callsign}}</ul>
-                    <ul>Aircraft ID: {{icao}}</ul>
-                    <ul>Altitude: {{altitude}} ft</ul>
-                    <ul>Speed: {{speed}} kt</ul>
-                </div>
-            </div>
+      <div v-if='view' id='info'>
+        <div class="mapboxgl-popup mapboxgl-popup-anchor-bottom" style="z-index: 1;">
+          <div class="mapboxgl-popup-content">
+            <img v-if='ascending' src="icons/ascend.png" class='status'>
+            <img v-else-if='descending' src="icons/descend.png" class='status'>
+            <ul>Flight: {{callsign}}</ul>
+            <ul>Aircraft ID: {{icao}}</ul>
+            <ul>Altitude: {{altitude}} ft</ul>
+            <ul>Speed: {{speed}} kt</ul>
+          </div>
         </div>
-        <script>
-            // Easily modify the values in the aircraft info window.
-            var vm = new Vue({
-                el: '#info',
-                data: {
-                    callsign    : null,
-                    icao        : null,
-                    altitude    : null,
-                    speed       : null,
-                    ascending   : false,
-                    descending  : false,
-                    view        : false
-                },
-                methods: {
-                    blink: function() {
-                        if (this.ascending) {
-                            setTimeout(() => { this.ascending = false; }, 700);
-                            this.ascending = true;
-                        } else if (this.descending) {
-                            setTimeout(() => { this.descending = false; }, 700);
-                            this.descending = true;
-                        }
-                    }
-                }
-            });
-        </script>
+      </div>
+      <script>
+        // Easily modify the values in the aircraft info window.
+        var vm = new Vue({
+          el: '#info',
+          data: {
+            callsign    : null,
+            icao        : null,
+            altitude    : null,
+            speed       : null,
+            ascending   : false,
+            descending  : false,
+            view        : false
+          },
+          methods: {
+            blink: function() {
+              if (this.ascending) {
+                setTimeout(() => { this.ascending = false; }, 700);
+                this.ascending = true;
+              } else if (this.descending) {
+                setTimeout(() => { this.descending = false; }, 700);
+                this.descending = true;
+              }
+            }
+          }
+        });
+      </script>
     </div>
   </body>
 </html>
