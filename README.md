@@ -5,8 +5,8 @@ This software requires an RTL-SDR and an antenna, for more details, see the full
 
 This README is a largely stripped down version of the one linked above, which goes into much more depth on the dump1090 ModeS decoder. This repo is a fork of MalcolmRobb's [dump1090](https://github.com/MalcolmRobb/dump1090/) repo, effectively all changes can be found in the frontend browser client. If you want to extend dump1090's browser frontend with mapbox, then this software lays out the groundwork for you.
 
-**Changes**:
-
+Changes
+---
 * We use Mapbox GL JS instead of Google Maps, enabling a new dimension of map customization.
   - The map's style can be changed by linking a style in `public_html/config.js`
   - You can use [Mapbox Studio](https://www.mapbox.com/mapbox-studio/) to style your maps.
