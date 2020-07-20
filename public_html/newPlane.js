@@ -2,6 +2,7 @@ var planeObject = {
     oldlat      : null,
     oldlon      : null,
     oldalt      : null,
+    delta_alt   : 0,
 
     // Basic location information
     altitude    : null,
@@ -48,6 +49,7 @@ var planeObject = {
     // When was this last updated?
     updated     : null,
     reapable    : false,
+    count_down  : 10, // decrements each time the new altitude position is the same as the old one
 
 
     // Update our planes tail line,
@@ -67,13 +69,15 @@ var planeObject = {
             if (this.is_selected) {
                 vm.ascending = false;
                 vm.descending = false;
-                if (this.oldalt < this.altitude) {
+
+                if (this.delta_alt > 150) {
                     vm.ascending  = true;
-                } else {
+                } else if (this.delta_alt < -150){
                     vm.descending = true;
                 }
             }
         },
+
 
     // Appends data to the running track so we can get a visual tail on the plane
     // Only useful for a long running browser session.
@@ -82,6 +86,7 @@ var planeObject = {
             this.trackline.push([this.longitude, this.latitude]);
         },
 
+
     // This is to remove the line from the screen if we deselect the plane
     funcClearLine   : function() {
             // only try to remove if a layer is found
@@ -89,6 +94,7 @@ var planeObject = {
                 map.removeLayer(this.sourceID);
             }
         },
+
 
     // Closes info box and resets Vue instance.
     funcUnselectPlane: function() {
@@ -101,6 +107,7 @@ var planeObject = {
             vm.altitude = null
             vm.speed    = null;
         },
+
 
     // update and display the planes tail line
     funcSelectPlane : function() {
@@ -128,6 +135,7 @@ var planeObject = {
             vm.speed = this.speed;
             vm.view = true; // displays the window
         },
+
 
     // Update the plane data that we recieve from the geoJSON response.
     funcUpdateData  : function(data){
@@ -197,12 +205,29 @@ var planeObject = {
                 }
                 // Right now we only care about lat/long, if alt is updated only, oh well
                 // TODO (MILAN): modify this if we add 3D or line colour that depends on alt
-                if ((changeLat == true) || (changeLon == true)) {
+                if (changeLat || changeLon || changeAlt) {
                     this.coord_change = true;
                     this.funcAddToTrack();
                     this.funcUpdateLines(); // will only display change if selected
+
+                    if (this.oldalt != null) {
+                        // handle altitude change
+                        if (changeAlt) {
+                            this.delta_alt += this.altitude - this.oldalt; // decrease in alt decreases overall position.
+                            this.count_down = 10; // reset our counter
+                        } else {
+                            // if unchanged for 10 messages, reset altitude point of reference
+                            if (this.count_down === 0) {
+                                this.delta_alt = 0;
+                                this.count_down = 10;
+                            } else {
+                                this.count_down--;
+                            }
+                        }
+                    }
                 } else {
                     this.coord_change = false;
+
                 }
 
                 this.marker = this.funcUpdateMarker();
@@ -217,6 +242,7 @@ var planeObject = {
             else
                 this.vTrack = false;
         },
+
 
     // Update our marker on the map
     /** We do this in 3 ways
